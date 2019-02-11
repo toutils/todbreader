@@ -1,0 +1,148 @@
+todbreader is a gui application which reads databases created by todbmanager
+
+
+==INSTALLATION==
+--Linux--
+There is no binary version for linux.
+Download the source from the releases tab, and then follow the linux compilation
+instructions. 
+
+
+--Windows--
+Download the latest release on the releases tab, extract into your preferred
+directory, and run the program with todbreader.exe. The windows release comes
+with all of the required libraries. 
+
+
+==OPERATION==
+Everything should be fairly self explanatory. 
+
+Load a database by clicking the load button. You can download this database
+from https://github.com/toutils/todbmanager/releases
+and extract it somewhere (like the directory you extracted todbreader to). 
+
+You can also run todbmanager and the reader at the same time with the same
+database. Just open the todbmanager db instead (you should have downloaded the
+release database, extracted it into the todbmanager directory, and renamed it
+to.db if your using todbmanager to keep it up to date). 
+If you did a full scrape yourself, the database name is still to.db in the
+todbmanager directory. 
+
+You do not need to reload the database with todbreader if your pointing at the
+todbmanager database everytime it updates, you only need to point it at the
+database file once when you open todbreader. 
+
+On linux you may see some limited debug information in the console, on windows
+the console is not shown. I plan on adding a desktop file on linux at some point
+but in the meantime, you can run it in linux by going to the compile directory
+and running
+$./todbreader
+
+
+==DATABASE COMPATIBILITY==
+This is designed to read databases created by v0.2 of todbmanager. 
+If todbamanger changes database format, todbreader will be updated as well. 
+At the moment there's no metadata in the database file, there is nothing
+todbreader is checking to ensure compatibility; this will be handled better in
+the future. 
+
+
+==COMPILATION==
+--Linux version ( compiled on linux )--
+These instructions were created based on Xubuntu, but they should apply to
+all ubuntu derivitives. Compilation on any other distribution should be the
+same, with the only difference being the names of the dependencies (and the
+package manager). The libraries used by todbreader are common, they should be
+in your package manager, the names may just be slightly different. 
+
+Install the build dependencies:
+$sudo apt-get install build-essential pkg-config libgtk-3-dev libsqlite3-dev
+
+Run the compile script:
+$./compile_linux.sh
+
+You can now run todbreader with
+$./todbreader
+
+
+--Windows version ( compiled on windows )--
+This was tested on windows 7, but it should be fine on windows 10.
+These instructions are assuming 64bit, but 32 would probably not be an issue. 
+For a 32bit version, some package names are different, and you would install
+the 32bit version of msys2, instead of the 64 bit version.
+
+This is using MSYS2 to compile, which requires a windows installation. 
+You should be able to do this entirely from linux, but it requires
+cross-compiling all of the necessary libraries in addition to todbreader, which
+I haven't done yet. MSYS2 conveniently provides all of these cross-compiled
+libraries. 
+
+Download the latest version of MSYS2 (64bit) from:
+https://www.msys2.org/
+
+Once installed run "MSYS2 MinGW 64-bit"
+Update the system with 
+$pacman -Syu
+
+You will likely be prompted with
+"warning: terminate MSYS2 without returning to shell and check for updates 
+again"
+"warning: for example close your terminal window instead of calling exit"
+after the update is complete.
+
+Close the window at this point, if it warns you about killing a process, do it. 
+
+Restart "MSYS2 MinGW 64-bit"
+update msys2 again with:
+$pacman -Syu
+
+At this point everything should be up to date. 
+
+Install the necessary dependencies:
+$pacman -S pkg-config
+$pacman -S mingw64/mingw-w64-x86_64-gtk3
+$pacman -S mingw64/mingw-w64-x86_64-gcc
+
+If you've read the linux compile instructions, sqlite3 isn't listed here
+because it should have already been pulled in by the above. 
+
+At this point you can compile.
+Go to the directory you downloaded and extracted the sources to with MSYS.
+If you extracted the sources into a folder called "todbreader" on your desktop
+for example, the command may be:
+$cd "/c/Users/{username}/Desktop"
+with {username} being replaced by your username. 
+
+Note that windows path names will not work, "C:\Users\{username}\Desktop" will
+fail. Ensure you are using "/" instead of "\" and replace "C:" with "/c/". 
+
+Once you've changed directory to the sources directory, run
+$./compile_windows.sh
+
+This will create a folder named "build" in the present directory, which contains
+todbreader.exe, dll's for the third party libraries, their licenses, and a few
+other files needed to run the program. You can copy this build directory 
+anywhere, but everything in this directory is necessary to run todbreader.exe, 
+if you attempt to run todbreader.exe without any of these files, it will 
+complain that it cannot find the files. 
+
+You may notice at this point there is a todbreader.exe in the source directory
+as well. You can run this directly, but only if you launch it from the MSYS2 
+shell. If you run this outside of MSYS2, it won't be able to find the necessary
+libraries. The compile_windows.sh script copies the needed libraries from the
+MSYS2 library directories into the build folder for you. They need to be present
+in the same directory as the executable.
+
+
+==THIRD PARTY LICENSES==
+All of the third party license information is in the "thirdparty_licenses"
+directory. The "thirdparty_licenses" file, contains the name of every dll
+distributed with the released version, where it's source is located, and the
+license it is released under. The license field will specify a license file,
+contained in the same directory. 
+
+There is no "released" version for linux. The compilation instructions will
+detail the installation of several packages. Consult your distribution
+documentation for details on where these license files are, however the source
+code download should also contain this license information, there will just
+be no dll's, you have installed the libraries with linux already. 

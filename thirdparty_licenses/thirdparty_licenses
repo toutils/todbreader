@@ -1,0 +1,156 @@
+todbreader uses several third party libraries which are listed below
+along with their license files that contain their licenses.
+
+These are listed based on the dll's released along with the program
+(on windows)
+
+The license text can be found in the same directory as this file.
+Included DLL's were downloaded from the MSYS2 project:
+https://www.msys2.org/
+
+In addition to the original source, the MSYS2 sources can be found at:
+https://github.com/Alexpux/MSYS2-packages
+
+libatk-1.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libbz2-1.dll
+Source: https://sourceforge.net/projects/bzip2/
+License: bzip2
+
+libcairo-2.dll
+Source: https://www.cairographics.org/
+License: LGPL2_1 or MPL1_1
+
+libcairo-gobject-2.dll
+Source: https://www.cairographics.org/
+License: LGPL2_1 or MPL1_1
+
+libdatrie-1.dll
+Source: https://linux.thai.net/~thep/datrie/datrie.html
+License: LGPL3
+
+libepoxy-0.dll
+Source: https://github.com/anholt/libepoxy
+License: libepoxy 
+
+libexpat-1.dll
+Source: https://libexpat.github.io/
+License: libexpat
+
+libffi-6.dll
+Source: https://github.com/libffi/libffi
+License: libffi
+
+libfontconfig-1.dll
+Source: https://www.freedesktop.org/wiki/Software/fontconfig/
+License: libfontconfig
+
+libfreetype-6.dll
+Source: https://www.freetype.org/
+License: GPL2 or freetype
+
+libfribidi-0.dll
+Source: https://github.com/fribidi/fribidi
+License: LGPL2_1
+
+libgcc_s_seh-1.dll
+Source: https://gcc.gnu.org/
+License: GPL3_runtime_exception
+
+libgdk_pixbuf-2.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libgdk-3-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libgio-2.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libglib-2.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libgmodule-2.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libgobject-2.0-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libgraphite2.dll
+Source: http://graphite.sil.org/
+Source: https://github.com/silnrsi/graphite
+License: LGPL2_1
+
+libgtk-3-0.dll
+Source: https://www.gtk.org/documentation.php
+License: LGPL2_1
+
+libharfbuzz-0.dll
+Source: https://www.freedesktop.org/wiki/Software/HarfBuzz/
+Source: https://github.com/harfbuzz/harfbuzz
+License: harfbuzz
+
+libiconv-2.dll
+Source: https://www.gnu.org/software/libiconv/
+License: LIBGPL2
+
+libintl-8.dll
+Source: https://www.gnu.org/software/gettext/
+License: GPL3
+
+libpango-1.0-0.dll
+Source: https://www.pango.org/
+License: LIBGPL2
+
+libpangocairo-1.0-0.dll
+Source: https://www.pango.org/
+License: LIBGPL2
+
+libpangoft2-1.0-0.dll
+Source: https://www.pango.org/
+License: LIBGPL2
+
+libpangowin32-1.0-0.dll
+Source: https://www.pango.org/
+License: LIBGPL2
+
+libpcre-1.dll
+Source: https://www.pcre.org/
+License: pcre
+
+libpixman-1-0.dll
+Source: http://www.pixman.org/
+License: pixman
+
+libpng16-16.dll
+Source: http://libpng.org/pub/png/libpng.html
+License: png16
+
+libsqlite3-0.dll
+Source: https://www.sqlite.org/
+License: Public Domain
+( Statement not included in file, can be found at
+https://www.sqlite.org/copyright.html )
+
+libstdc++-6.dll
+Source: https://gcc.gnu.org/
+License: GPL3_runtime_exception
+
+libthai-0.dll
+Source: https://linux.thai.net/projects/libthai
+License: LGPL3
+
+libwinpthread-1.dll
+Source: https://mingw-w64.org/
+License: mingw-w64
+
+zlib1.dll
+Source: https://mingw-w64.org/
+License: mingw-w64

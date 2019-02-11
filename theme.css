@@ -1,0 +1,45 @@
+levelbar#stats_levelbar block.lowest {
+	background-color: red;
+	border-style: solid;
+	border-color: black;
+}
+
+levelbar#stats_levelbar block.low {
+	background-color: red;
+	border-style: solid;
+	border-color: black;
+}
+
+levelbar#stats_levelbar block.mid {
+	background-color: yellow;
+	border-style: solid;
+	border-color: black;
+}
+
+levelbar#stats_levelbar block.high {
+	background-color: green;
+	border-style: solid;
+	border-color: black;
+}
+
+levelbar#stats_levelbar block.full {
+	background-color: green;
+	border-style: solid;
+	border-color: black;
+}
+
+label {
+	color: black;
+}
+
+#bordered {
+	border-style: solid;
+	border-color: black;
+	border-width: 1px;
+}
+
+#bordered_heavy {
+	border-style: solid;
+	border-color: black;
+	border-width: 2px;
+}
