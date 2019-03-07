@@ -251,7 +251,6 @@ static void search(GtkWidget *widget, gpointer data) {
 			stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
 		}
 	}
-	g_print("%f %f %f %f\n",stats_average[0],stats_average[1],stats_average[2],stats_average[3]);
 	
 	//find the number of pages
 	total_pages=(total_results/limit);
