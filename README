@@ -42,9 +42,8 @@ $./todbreader
 ==DATABASE COMPATIBILITY==
 This is designed to read databases created by v0.3 of todbmanager. 
 If todbamanger changes database format, todbreader will be updated as well. 
-At the moment there's no metadata in the database file, there is nothing
-todbreader is checking to ensure compatibility; this will be handled better in
-the future. 
+As of version v0.3 of todbmanager, there is versioning data in the database
+file. 
 
 
 ==COMPILATION==
