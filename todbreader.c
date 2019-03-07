@@ -103,6 +103,7 @@ static void create_indexes() {
 
 
 	g_print("recreating stats table indexes if needed...\n");
+	set_statusbar_text("recreating stats table indexes if needed...");
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_id_covering ON"
 		" stats (requester_id, requester_id, requester_name, fair, fast, pay,"
@@ -120,6 +121,7 @@ static void create_indexes() {
 	rc=sqlite3_finalize(stmt);
 
 	g_print("recreating review table indexes if needed...\n");
+	set_statusbar_text("recreating review table indexes if needed...");
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_reviews_requester_id_covering ON"
 		" reviews (requester_id, date, requester_name, rowid,"
@@ -136,13 +138,8 @@ static void create_indexes() {
 	rc=sqlite3_step(stmt);
 	rc=sqlite3_finalize(stmt);
 
-	/*
-	rc_comment=sqlite3_prepare_v2(db,
-			"SELECT comment, notes, date, type FROM comments WHERE p_key_review=? ORDER BY date DESC;"
-			,-1, &stmt_comment, NULL);
-	*/
-
 	g_print("recreating comment table indexes if needed...\n");
+	set_statusbar_text("recreating review comment indexes if needed...");
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_comments_covering ON"
 		" comments (p_key_review, date, comment, notes, type);"
