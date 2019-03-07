@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /*
-todbreader version 0.1
-todbmanager database version 0.2
+todbreader version 0.2
+todbmanager database version 1
 */
 
 #include <string.h>
@@ -95,6 +95,62 @@ static void show_error_dialog(char *text) {
 	gtk_widget_destroy(error_dialog);
 }
 
+//create todbreader indexes if they don't exist
+static void create_indexes() {
+	int rc; //sqlite response code
+	int rc_comment;
+	sqlite3_stmt *stmt;
+
+
+	g_print("recreating stats table indexes if needed...\n");
+	rc=sqlite3_prepare_v2(db,
+		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_id_covering ON"
+		" stats (requester_id, requester_id, requester_name, fair, fast, pay,"
+		" comm, tosviol, numreviews);"
+		,-1, &stmt, NULL);
+	rc=sqlite3_step(stmt);
+	rc=sqlite3_finalize(stmt);
+
+	rc=sqlite3_prepare_v2(db,
+		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_name_covering ON"
+		" stats (requester_id, requester_id, requester_name, fair, fast, pay,"
+		" comm, tosviol, numreviews);"
+		,-1, &stmt, NULL);
+	rc=sqlite3_step(stmt);
+	rc=sqlite3_finalize(stmt);
+
+	g_print("recreating review table indexes if needed...\n");
+	rc=sqlite3_prepare_v2(db,
+		"CREATE INDEX IF NOT EXISTS todbreader_reviews_requester_id_covering ON"
+		" reviews (requester_id, date, requester_name, rowid,"
+		" fair, fast, pay, comm, review, notes, tosviol);"
+		,-1, &stmt, NULL);
+	rc=sqlite3_step(stmt);
+	rc=sqlite3_finalize(stmt);
+
+	rc=sqlite3_prepare_v2(db,
+		"CREATE INDEX IF NOT EXISTS todbreader_reviews_requester_name_covering ON"
+		" reviews (requester_name, date, requester_id, rowid,"
+		" fair, fast, pay, comm, review, notes, tosviol);"
+		,-1, &stmt, NULL);
+	rc=sqlite3_step(stmt);
+	rc=sqlite3_finalize(stmt);
+
+	/*
+	rc_comment=sqlite3_prepare_v2(db,
+			"SELECT comment, notes, date, type FROM comments WHERE p_key_review=? ORDER BY date DESC;"
+			,-1, &stmt_comment, NULL);
+	*/
+
+	g_print("recreating comment table indexes if needed...\n");
+	rc=sqlite3_prepare_v2(db,
+		"CREATE INDEX IF NOT EXISTS todbreader_comments_covering ON"
+		" comments (p_key_review, date, comment, notes, type);"
+		,-1, &stmt, NULL);
+	rc=sqlite3_step(stmt);
+	rc=sqlite3_finalize(stmt);
+}
+
 static void search(GtkWidget *widget, gpointer data) {
 	if (db==NULL) {
 		show_error_dialog("No database connected");
@@ -155,7 +211,7 @@ static void search(GtkWidget *widget, gpointer data) {
 			,-1, &stmt, NULL);
 		rc=sqlite3_prepare_v2(db,
 			"SELECT fair,fast,pay,comm"
-			" FROM reviews WHERE requester_id=?;"
+			" FROM stats WHERE requester_id=?;"
 			,-1, &stmt_stats_counter, NULL);
 	}
 	else if (!strcmp(search_type, "Requester Name")) {
@@ -166,7 +222,7 @@ static void search(GtkWidget *widget, gpointer data) {
 			,-1, &stmt, NULL);
 		rc=sqlite3_prepare_v2(db,
 			"SELECT fair,fast,pay,comm"
-			" FROM reviews WHERE requester_name=?;"
+			" FROM stats WHERE requester_name=?;"
 			,-1, &stmt_stats_counter, NULL);
 	}
 	g_free(search_type);
@@ -190,27 +246,15 @@ static void search(GtkWidget *widget, gpointer data) {
 
 	//calculate average stats
 	// fair,fast,pay,comm	
+	
 	float stats_average[4]={ 0,0,0,0 };
-	int stats_review_count[4]={ 0,0,0,0 };
-
 	rc=sqlite3_step(stmt_stats_counter);
-	while(rc==SQLITE_ROW) {
+	if (rc==SQLITE_ROW) {
 		for (int i=0; i<4; i++) {
-			//null will return 0, and there are no 0's in the database
-			if( sqlite3_column_int(stmt_stats_counter,i)!=0 ) {
-				stats_average[i]+=(float)sqlite3_column_int(stmt_stats_counter,i);
-				stats_review_count[i]+=1;
-			}
-		}
-		total_results+=1;
-		rc=sqlite3_step(stmt_stats_counter);
-	}
-	for (int i=0; i<4; i++) {
-		if ( stats_review_count[i]==0 ) { stats_average[i]=0; }
-		else {
-			stats_average[i]=stats_average[i]/(float)stats_review_count[i];
+			stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
 		}
 	}
+	g_print("%f %f %f %f\n",stats_average[0],stats_average[1],stats_average[2],stats_average[3]);
 	
 	//find the number of pages
 	total_pages=(total_results/limit);
@@ -485,6 +529,9 @@ static void load_database(GtkWidget *widget, gpointer data) {
 		db=NULL;
 	}
 	g_free(filepath);
+
+	//create the indexes if needed
+	create_indexes();
 
 	//get reviews and comments counts
 	sqlite3_prepare_v2(db, "SELECT Count(*) FROM reviews;",-1, &stmt, NULL);
