@@ -112,17 +112,21 @@ static void create_indexes() {
 
 	g_print("recreating stats table indexes if needed...\n");
 	set_statusbar_text("recreating stats table indexes if needed...");
+
+	//covering index not needed, sqlite autoindex used for unique field
+	/*
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_id_covering ON"
-		" stats (requester_id, requester_id, requester_name, fair, fast, pay,"
+		" stats (requester_id, fair, fast, pay,"
 		" comm, tosviol, numreviews);"
 		,-1, &stmt, NULL);
 	rc=sqlite3_step(stmt);
 	rc=sqlite3_finalize(stmt);
+	*/
 
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_name_covering ON"
-		" stats (requester_id, requester_id, requester_name, fair, fast, pay,"
+		" stats (requester_name, fair, fast, pay,"
 		" comm, tosviol, numreviews);"
 		,-1, &stmt, NULL);
 	rc=sqlite3_step(stmt);
@@ -130,17 +134,20 @@ static void create_indexes() {
 
 	g_print("recreating review table indexes if needed...\n");
 	set_statusbar_text("recreating review table indexes if needed...");
+
+	
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_reviews_requester_id_covering ON"
-		" reviews (requester_id, date, requester_name, rowid,"
+		" reviews (requester_id, date, requester_name,"
 		" fair, fast, pay, comm, review, notes, tosviol);"
 		,-1, &stmt, NULL);
 	rc=sqlite3_step(stmt);
 	rc=sqlite3_finalize(stmt);
+	
 
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_reviews_requester_name_covering ON"
-		" reviews (requester_name, date, requester_id, rowid,"
+		" reviews (requester_name, date, requester_id,"
 		" fair, fast, pay, comm, review, notes, tosviol);"
 		,-1, &stmt, NULL);
 	rc=sqlite3_step(stmt);
