@@ -180,6 +180,7 @@ static void search(GtkWidget *widget, gpointer data) {
 	
 	int total_results=0;
 	int total_pages=0;
+	int total_tos=0;
 
 	//don't free query
 	const gchar *query=gtk_entry_get_text(
@@ -222,7 +223,6 @@ static void search(GtkWidget *widget, gpointer data) {
 			" FROM stats WHERE requester_name=?;"
 			,-1, &stmt_stats_counter, NULL);
 	}
-	g_free(search_type);
 	//else should never happen
 
 	char limit_buffer[10];
@@ -242,14 +242,44 @@ static void search(GtkWidget *widget, gpointer data) {
 	g_print( "review sql:\n%s\n", sqlite3_expanded_sql(stmt) );
 	
 	float stats_average[4]={ 0,0,0,0 };
-	rc=sqlite3_step(stmt_stats_counter);
-	if (rc==SQLITE_ROW) {
-		for (int i=0; i<4; i++) {
-			stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
+
+	if (!strcmp(search_type, "Requester ID")) {
+		rc=sqlite3_step(stmt_stats_counter);
+		if (rc==SQLITE_ROW) {
+			for (int i=0; i<4; i++) {
+				stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
+			}
+			total_tos=sqlite3_column_int(stmt_stats_counter,4);
+			total_results=sqlite3_column_int(stmt_stats_counter,5);
+			g_print("requester id numreviews:%i",total_results);
 		}
-		//using the stats table is faster, the numreviews field should be accurate
-		total_results=sqlite3_column_int(stmt_stats_counter,5);
 	}
+	//the stats table can't be used for requester_name, instead, generate an
+	//average of stats averages across the multiple requester id's
+	//generating stats without the stats table (for average across all reviews
+	//using a requester name, takes too long. 
+	else if (!strcmp(search_type, "Requester Name")) {
+		rc=sqlite3_step(stmt_stats_counter);
+		int total_requester_ids=0;
+		while (rc==SQLITE_ROW) {
+			total_requester_ids+=1;
+			for (int i=0; i<4; i++) {
+				stats_average[i]+=(float)sqlite3_column_double(stmt_stats_counter,i);
+			}
+			total_tos+=sqlite3_column_int(stmt_stats_counter,4);
+			total_results+=sqlite3_column_int(stmt_stats_counter,5);
+			rc=sqlite3_step(stmt_stats_counter);
+		}
+		//calculate average of requester averages
+		if (total_requester_ids==0) { total_results=0; }
+		else {
+			for (int i=0; i<4; i++) {
+				stats_average[i]=stats_average[i]/total_requester_ids;
+			}
+		}
+	}
+	g_free(search_type);
+	
 	total_pages=(total_results/limit);
 	if ( (total_results % limit) !=0 ) {
 		total_pages+=1;
@@ -272,7 +302,7 @@ static void search(GtkWidget *widget, gpointer data) {
 
 	char stats_buffer_array_labels[4][40] = 
 		{ "Fair:\t\t\0", "Fast:\t\t\0", "Pay:\t\t\0", "Comm:\t\0" };
-	char stats_buffer[40];
+	char stats_buffer[200];
 
 	int result_count=0;
 	int comment_count=0;
@@ -306,11 +336,16 @@ static void search(GtkWidget *widget, gpointer data) {
 		gtk_level_bar_set_value( GTK_LEVEL_BAR(level_bar), stats_average[i] );
 		gtk_grid_attach( GTK_GRID(grid_stats_average), level_bar, i, 0, 1, 1);
 	}
-
 	gtk_grid_attach(GTK_GRID(grid_results),grid_stats_average, 0, result_count, 1, 1);
-	result_count+=1;	
+	result_count+=1;
 
-	g_print("next review..\n");
+	//total reviews/tosviolations
+	sprintf( stats_buffer, "Reviews:%i TOS Violations:%i", 
+		total_results, total_tos);
+	label_ptr=gtk_label_new(stats_buffer);
+	gtk_grid_attach(GTK_GRID(grid_results),label_ptr, 0, result_count, 1, 1);
+	result_count+=1;
+
 	rc=sqlite3_step(stmt);
 
 	while(rc==SQLITE_ROW) {
@@ -356,6 +391,12 @@ static void search(GtkWidget *widget, gpointer data) {
 			gtk_label_set_xalign( GTK_LABEL(label_ptr), 0.0f );
 			gtk_label_set_selectable ( GTK_LABEL(label_ptr), TRUE);
 			gtk_grid_attach(GTK_GRID(grid_stats), label_ptr, 0, i, 1, 1);
+		}
+		//tos violation
+		if ( sqlite3_column_int(stmt, 10) == 1 ) {
+			label_ptr=gtk_label_new("TOS VIOLATION");
+			gtk_label_set_xalign( GTK_LABEL(label_ptr), 0.0f );
+			gtk_grid_attach(GTK_GRID(grid_stats), label_ptr, 0, 7, 1, 1);
 		}
 		
 		//REVIEW GRID
