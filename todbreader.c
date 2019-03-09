@@ -83,6 +83,14 @@ static void check_error(int rc, sqlite3 *sb) {
 static void set_statusbar_text(char *text) {
 	GObject *label_status=gtk_builder_get_object(builder, "label_status");
 	gtk_label_set_text( GTK_LABEL(label_status), text);
+
+	//this should be handled with threading
+	//hold execution until the status bar is updated, otherwise gtk will
+	//not update the widget until idle
+	gtk_widget_queue_draw(GTK_WIDGET(label_status));  
+	while (g_main_context_pending(NULL)) {
+    	g_main_context_iteration(NULL,FALSE);
+	}
 }
 
 static void show_error_dialog(char *text) {
