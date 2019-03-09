@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /*
-todbreader version 0.2
+todbreader version 0.2.1
 todbmanager database version 1
 */
 
