@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /*
-todbreader version 0.2.1
+todbreader version 0.2.2
 todbmanager database version 1
 */
 
@@ -294,6 +294,8 @@ static void search(GtkWidget *widget, gpointer data) {
 		}
 	}
 	g_free(search_type);
+	rc=sqlite3_finalize(stmt_stats_counter);
+	check_error(rc, db);
 	
 	total_pages=(total_results/limit);
 	if ( (total_results % limit) !=0 ) {
