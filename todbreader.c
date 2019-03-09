@@ -207,7 +207,7 @@ static void search(GtkWidget *widget, gpointer data) {
 			" FROM reviews WHERE requester_id=? ORDER BY date DESC LIMIT ? OFFSET ?;"
 			,-1, &stmt, NULL);
 		rc=sqlite3_prepare_v2(db,
-			"SELECT fair,fast,pay,comm"
+			"SELECT fair,fast,pay,comm,tosviol,numreviews"
 			" FROM stats WHERE requester_id=?;"
 			,-1, &stmt_stats_counter, NULL);
 	}
@@ -218,13 +218,13 @@ static void search(GtkWidget *widget, gpointer data) {
 			" FROM reviews WHERE requester_name=? ORDER BY date DESC LIMIT ? OFFSET ?;"
 			,-1, &stmt, NULL);
 		rc=sqlite3_prepare_v2(db,
-			"SELECT fair,fast,pay,comm"
+			"SELECT fair,fast,pay,comm,tosviol,numreviews"
 			" FROM stats WHERE requester_name=?;"
 			,-1, &stmt_stats_counter, NULL);
 	}
 	g_free(search_type);
-
 	//else should never happen
+
 	char limit_buffer[10];
 	char offset_buffer[10];
 	sprintf(limit_buffer, "%i", limit);
@@ -240,9 +240,6 @@ static void search(GtkWidget *widget, gpointer data) {
 	check_error(rc, db); 
 
 	g_print( "review sql:\n%s\n", sqlite3_expanded_sql(stmt) );
-
-	//calculate average stats
-	// fair,fast,pay,comm	
 	
 	float stats_average[4]={ 0,0,0,0 };
 	rc=sqlite3_step(stmt_stats_counter);
@@ -250,15 +247,15 @@ static void search(GtkWidget *widget, gpointer data) {
 		for (int i=0; i<4; i++) {
 			stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
 		}
+		//using the stats table is faster, the numreviews field should be accurate
+		total_results=sqlite3_column_int(stmt_stats_counter,5);
 	}
-	
-	//find the number of pages
 	total_pages=(total_results/limit);
 	if ( (total_results % limit) !=0 ) {
 		total_pages+=1;
 	}
 	g_print("total pages:%i\n", total_pages);
-	char total_pages_buffer[10];
+	char total_pages_buffer[20];
 	sprintf(total_pages_buffer, "%i", total_pages);
 	gtk_label_set_text( GTK_LABEL(gtk_builder_get_object(builder, "label_total_pages")), total_pages_buffer );
 
@@ -317,6 +314,7 @@ static void search(GtkWidget *widget, gpointer data) {
 	rc=sqlite3_step(stmt);
 
 	while(rc==SQLITE_ROW) {
+		total_results+=1;
 		//STATS GRID
 		grid_stats=gtk_grid_new();
 
@@ -425,6 +423,7 @@ static void search(GtkWidget *widget, gpointer data) {
 		result_count+=1;
 		rc=sqlite3_step(stmt);
 	}
+
 	rc=sqlite3_finalize(stmt);
 	check_error(rc, db);
 	gtk_grid_set_row_spacing(GTK_GRID(grid_results), 6);
