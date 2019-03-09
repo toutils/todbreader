@@ -27,6 +27,7 @@ todbmanager database version 1
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <sqlite3.h>
+#include <time.h>
 
 /*NOTES
 -pointers returned from sqlite are only valid until finalize or the next step
@@ -72,13 +73,6 @@ GtkWidget *new_label_from_sqlite3_column( sqlite3_stmt *stmt, int index ) {
 	return label;
 }
 
-//checks and logs sqlite errors
-static void check_error(int rc, sqlite3 *sb) {
-	if (rc != SQLITE_OK) {
-		g_print("SQL ERROR:%d %s\n",rc, sqlite3_errmsg(db));
-	}
-}
-
 //maybe more here later, logging, etc
 static void set_statusbar_text(char *text) {
 	GObject *label_status=gtk_builder_get_object(builder, "label_status");
@@ -93,7 +87,7 @@ static void set_statusbar_text(char *text) {
 	}
 }
 
-static void show_error_dialog(char *text) {
+static void show_error_dialog(const char *text) {
 	GObject *parent_window=gtk_builder_get_object(builder, "window");
 
 	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -101,6 +95,13 @@ static void show_error_dialog(char *text) {
 		flags, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s",text);
 	gtk_dialog_run(GTK_DIALOG(error_dialog));
 	gtk_widget_destroy(error_dialog);
+}
+
+//checks and logs sqlite errors
+static void check_error(int rc, sqlite3 *db) {
+	if (rc != SQLITE_OK && rc != SQLITE_DONE && rc != SQLITE_ROW) {
+		show_error_dialog(sqlite3_errmsg(db));
+	}
 }
 
 //create todbreader indexes if they don't exist
@@ -113,24 +114,18 @@ static void create_indexes() {
 	g_print("recreating stats table indexes if needed...\n");
 	set_statusbar_text("recreating stats table indexes if needed...");
 
-	//covering index not needed, sqlite autoindex used for unique field
-	/*
-	rc=sqlite3_prepare_v2(db,
-		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_id_covering ON"
-		" stats (requester_id, fair, fast, pay,"
-		" comm, tosviol, numreviews);"
-		,-1, &stmt, NULL);
-	rc=sqlite3_step(stmt);
-	rc=sqlite3_finalize(stmt);
-	*/
-
+	//covering index not needed for requester_id 
+	//sqlite autoindex used for unique field
 	rc=sqlite3_prepare_v2(db,
 		"CREATE INDEX IF NOT EXISTS todbreader_stats_requester_name_covering ON"
 		" stats (requester_name, fair, fast, pay,"
 		" comm, tosviol, numreviews);"
 		,-1, &stmt, NULL);
+	check_error(rc,db);
 	rc=sqlite3_step(stmt);
+	check_error(rc,db);
 	rc=sqlite3_finalize(stmt);
+	check_error(rc,db);
 
 	g_print("recreating review table indexes if needed...\n");
 	set_statusbar_text("recreating review table indexes if needed...");
@@ -141,8 +136,11 @@ static void create_indexes() {
 		" reviews (requester_id, date, requester_name,"
 		" fair, fast, pay, comm, review, notes, tosviol);"
 		,-1, &stmt, NULL);
+	check_error(rc,db);
 	rc=sqlite3_step(stmt);
+	check_error(rc,db);
 	rc=sqlite3_finalize(stmt);
+	check_error(rc,db);
 	
 
 	rc=sqlite3_prepare_v2(db,
@@ -150,8 +148,11 @@ static void create_indexes() {
 		" reviews (requester_name, date, requester_id,"
 		" fair, fast, pay, comm, review, notes, tosviol);"
 		,-1, &stmt, NULL);
+	check_error(rc,db);
 	rc=sqlite3_step(stmt);
+	check_error(rc,db);
 	rc=sqlite3_finalize(stmt);
+	check_error(rc,db);
 
 	g_print("recreating comment table indexes if needed...\n");
 	set_statusbar_text("recreating review comment indexes if needed...");
@@ -160,7 +161,9 @@ static void create_indexes() {
 		" comments (p_key_review, date, comment, notes, type);"
 		,-1, &stmt, NULL);
 	rc=sqlite3_step(stmt);
+	check_error(rc,db);
 	rc=sqlite3_finalize(stmt);
+	check_error(rc,db);
 }
 
 static void search(GtkWidget *widget, gpointer data) {
@@ -168,6 +171,8 @@ static void search(GtkWidget *widget, gpointer data) {
 		show_error_dialog("No database connected");
 		return;
 	}
+	set_statusbar_text("querying database...");
+	float start_time = (float)clock()/CLOCKS_PER_SEC;
 
 	//this probably isn't a great way to do this
 	//if called from next_page / prev_page, data will be non-null
@@ -222,10 +227,12 @@ static void search(GtkWidget *widget, gpointer data) {
 			"SELECT rowid,requester_name, requester_id, date, fair,fast,pay,comm,review,notes,tosviol"
 			" FROM reviews WHERE requester_id=? ORDER BY date DESC LIMIT ? OFFSET ?;"
 			,-1, &stmt, NULL);
+		check_error(rc,db);
 		rc=sqlite3_prepare_v2(db,
 			"SELECT fair,fast,pay,comm,tosviol,numreviews"
 			" FROM stats WHERE requester_id=?;"
 			,-1, &stmt_stats_counter, NULL);
+		check_error(rc,db);
 	}
 	else if (!strcmp(search_type, "Requester Name")) {
 		g_print("requester name search prepared\n");
@@ -233,10 +240,12 @@ static void search(GtkWidget *widget, gpointer data) {
 			"SELECT rowid,requester_name, requester_id, date, fair,fast,pay,comm,review,notes,tosviol"
 			" FROM reviews WHERE requester_name=? ORDER BY date DESC LIMIT ? OFFSET ?;"
 			,-1, &stmt, NULL);
+		check_error(rc,db);
 		rc=sqlite3_prepare_v2(db,
 			"SELECT fair,fast,pay,comm,tosviol,numreviews"
 			" FROM stats WHERE requester_name=?;"
 			,-1, &stmt_stats_counter, NULL);
+		check_error(rc,db);
 	}
 	//else should never happen
 
@@ -260,6 +269,7 @@ static void search(GtkWidget *widget, gpointer data) {
 
 	if (!strcmp(search_type, "Requester ID")) {
 		rc=sqlite3_step(stmt_stats_counter);
+		check_error(rc,db);
 		if (rc==SQLITE_ROW) {
 			for (int i=0; i<4; i++) {
 				stats_average[i]=(float)sqlite3_column_double(stmt_stats_counter,i);
@@ -275,6 +285,7 @@ static void search(GtkWidget *widget, gpointer data) {
 	//using a requester name, takes too long. 
 	else if (!strcmp(search_type, "Requester Name")) {
 		rc=sqlite3_step(stmt_stats_counter);
+		check_error(rc,db);
 		int total_requester_ids=0;
 		while (rc==SQLITE_ROW) {
 			total_requester_ids+=1;
@@ -364,6 +375,7 @@ static void search(GtkWidget *widget, gpointer data) {
 	result_count+=1;
 
 	rc=sqlite3_step(stmt);
+	check_error(rc,db);
 
 	while(rc==SQLITE_ROW) {
 		total_results+=1;
@@ -434,8 +446,11 @@ static void search(GtkWidget *widget, gpointer data) {
 		rc_comment=sqlite3_prepare_v2(db,
 			"SELECT comment, notes, date, type FROM comments WHERE p_key_review=? ORDER BY date DESC;"
 			,-1, &stmt_comment, NULL);
+		check_error(rc_comment,db);
 		rc_comment=sqlite3_bind_int(stmt_comment, 1, sqlite3_column_int(stmt, 0));
+		check_error(rc_comment,db);
 		rc_comment=sqlite3_step(stmt_comment);
+		check_error(rc_comment,db);
 	
 		grid_comments=gtk_grid_new();
 		gtk_grid_set_row_spacing(GTK_GRID(grid_comments), 4);
@@ -457,8 +472,10 @@ static void search(GtkWidget *widget, gpointer data) {
 			gtk_grid_attach(GTK_GRID(grid_comments), grid_comment, 0, comment_count, 1, 1);
 			comment_count+=1;
 			rc_comment=sqlite3_step(stmt_comment);
+			check_error(rc_comment,db);
 		}
 		rc_comment=sqlite3_finalize(stmt_comment);
+		check_error(rc_comment,db);
 
 		frame_comments=gtk_frame_new("Comments");
 		g_object_set (frame_comments, "hexpand", TRUE, NULL);
@@ -480,12 +497,18 @@ static void search(GtkWidget *widget, gpointer data) {
 
 		result_count+=1;
 		rc=sqlite3_step(stmt);
+		check_error(rc,db);
 	}
 
 	rc=sqlite3_finalize(stmt);
 	check_error(rc, db);
 	gtk_grid_set_row_spacing(GTK_GRID(grid_results), 6);
 	gtk_widget_show_all(GTK_WIDGET(grid_results));
+
+	float end_time = ((float)clock()/CLOCKS_PER_SEC)-start_time;
+	char statusbar_buffer[200];
+	snprintf(statusbar_buffer, 200, "query time: %.4fs", end_time);
+	set_statusbar_text(statusbar_buffer);
 }
 
 static void next_page(GtkWidget *widget, gpointer data) {
@@ -545,13 +568,17 @@ static void load_database(GtkWidget *widget, gpointer data) {
 
 	g_print("Opening database:%s\n",filepath);
 
+	//if there's an existing database connection, make sure to close it
+	if ( db!=NULL ) {
+		rc=sqlite3_close(db);
+		check_error(rc,db);
+	}
+
 	rc=sqlite3_open(filepath, &db);
-	if (rc) {
-		g_print("Error opening database: %s\n", sqlite3_errmsg(db));
-	}
-	else {
-		g_print("Database opened\n");
-	}
+	check_error(rc,db);
+	//set busy timeout
+	rc=sqlite3_busy_timeout(db, 60000);
+	check_error(rc,db);
 
 	//check if valid database
 	//this will return an integer or error out, don't care about version
@@ -563,25 +590,19 @@ static void load_database(GtkWidget *widget, gpointer data) {
 	if (rc==SQLITE_ROW) {
 		g_print("valid database\n");
 		sqlite3_finalize(stmt);
+		g_free(filepath);
 	}
 	//this is what is being looked for. 
 	else {
-		char error_message[100];
-		if (rc==SQLITE_NOTADB) {
-			sprintf(error_message,"%s\nInvalid database:SQLITE_NOTADB",filepath);
-		}
-		else {
-			sprintf(error_message,"%s\nInvalid database:unhandled rc:%i",filepath,rc);
-		}
-		g_print("%s\n",error_message);
-		show_error_dialog(error_message);
+		check_error(rc, db);
 
 		//cleanup
 		sqlite3_finalize(stmt);
 		sqlite3_close(db);
 		db=NULL;
+		g_free(filepath);
+		return;
 	}
-	g_free(filepath);
 
 	//create the indexes if needed
 	create_indexes();
