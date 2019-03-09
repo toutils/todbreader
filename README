@@ -22,11 +22,7 @@ from https://github.com/toutils/todbmanager/releases
 and extract it somewhere (like the directory you extracted todbreader to). 
 
 You can also run todbmanager and the reader at the same time with the same
-database. Just open the todbmanager db instead (you should have downloaded the
-release database, extracted it into the todbmanager directory, and renamed it
-to.db if your using todbmanager to keep it up to date). 
-If you did a full scrape yourself, the database name is still to.db in the
-todbmanager directory. 
+database. Just open the todbmanager db instead.
 
 You do not need to reload the database with todbreader if your pointing at the
 todbmanager database everytime it updates, you only need to point it at the
